@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -6,14 +7,109 @@
     <title>Temporal RL: AgentX Simulation</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;600;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Orbitron:wght@400;600;800&family=Rajdhani:wght@500;700&display=swap');
+      
       body {
-        font-family: 'Inter', sans-serif;
-        background-color: #0f172a; /* slate-900 */
-        color: #e2e8f0; /* slate-200 */
+        font-family: 'Rajdhani', sans-serif;
+        background-color: #020617; /* slate-950 */
+        background-image: 
+          linear-gradient(rgba(15, 23, 42, 0.9), rgba(15, 23, 42, 0.9)),
+          repeating-linear-gradient(0deg, transparent, transparent 19px, rgba(34, 211, 238, 0.05) 20px),
+          repeating-linear-gradient(90deg, transparent, transparent 19px, rgba(34, 211, 238, 0.05) 20px);
+        background-size: 100% 100%, 40px 40px, 40px 40px;
+        color: #e2e8f0;
+        overflow: hidden;
       }
+
       .font-mono {
         font-family: 'JetBrains Mono', monospace;
+      }
+      
+      .font-cyber {
+        font-family: 'Orbitron', sans-serif;
+      }
+
+      /* Glass Panel Effect */
+      .glass-panel {
+        background: rgba(15, 23, 42, 0.7);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(148, 163, 184, 0.1);
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+      }
+
+      .glass-panel-border {
+        border: 1px solid rgba(56, 189, 248, 0.2);
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.05);
+      }
+
+      /* Scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #0f172a; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #334155; 
+        border-radius: 3px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #475569; 
+      }
+
+      /* --- CHARACTER ANIMATIONS --- */
+      
+      /* Walking Legs */
+      @keyframes leg-move-left {
+        0%, 100% { transform: rotate(-20deg); }
+        50% { transform: rotate(20deg); }
+      }
+      @keyframes leg-move-right {
+        0%, 100% { transform: rotate(20deg); }
+        50% { transform: rotate(-20deg); }
+      }
+      
+      .animate-leg-l {
+        transform-origin: 12px 16px;
+        animation: leg-move-left 0.6s infinite ease-in-out;
+      }
+      .animate-leg-r {
+        transform-origin: 12px 16px;
+        animation: leg-move-right 0.6s infinite ease-in-out;
+      }
+
+      /* Villain Idle */
+      @keyframes villain-bounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-3px); }
+      }
+      .villain-idle {
+        animation: villain-bounce 2s infinite ease-in-out;
+      }
+
+      /* Villain Attack */
+      @keyframes villain-attack-anim {
+         0% { transform: scale(1) translateX(0); }
+         10% { transform: scale(1.4) rotate(-5deg); filter: drop-shadow(0 0 15px #ef4444); }
+         30% { transform: scale(1.4) rotate(5deg); }
+         50% { transform: scale(1.4) rotate(-5deg); }
+         70% { transform: scale(1.4) rotate(5deg); }
+         100% { transform: scale(1) translateX(0); }
+      }
+      .villain-attacking {
+        animation: villain-attack-anim 0.8s infinite;
+        z-index: 50;
+      }
+
+      /* Rewind Spin */
+      @keyframes spin-reverse {
+        from { transform: rotate(360deg); }
+        to { transform: rotate(0deg); }
+      }
+      .animate-spin-reverse {
+        animation: spin-reverse 1s linear infinite;
       }
     </style>
   <script type="importmap">

@@ -1,3 +1,4 @@
+
 import { GoogleGenAI, Type } from "@google/genai";
 import { GridCell, AgentState, CellType, AgentAction } from "../types";
 
@@ -9,9 +10,11 @@ const gridToString = (grid: GridCell[][], agent: AgentState): string => {
       switch (cell.type) {
         case CellType.WALL: return '#';
         case CellType.GOAL: return 'G';
-        case CellType.TRAP: return cell.isActive ? 'T' : '.';
+        // Treat all traps as dangerous for the AI, regardless of 'isActive' which was used for dynamic traps
+        case CellType.TRAP: return 'T'; 
         case CellType.DOOR: return cell.isOpen ? '_' : 'D';
         case CellType.SWITCH: return 'S';
+        case CellType.ITEM: return 'I'; // Items
         default: return '.';
       }
     }).join(' ');
@@ -35,30 +38,41 @@ export const getNextMoveFromGemini = async (
   const recentLogs = logs.slice(-5).join('\n');
 
   const prompt = `
-    You are an RL Agent (AgentX) in a grid world.
+    You are an RL Agent (AgentX) in a dungeon grid world.
+    
     Map Legend:
     A = Agent (You)
     # = Wall
-    G = Goal (Objective)
-    T = Active Trap (Avoid!)
-    D = Closed Door (Blocked)
-    _ = Open Door (Passable)
+    G = Goal (Treasure Chest - Requires 4 Keys to unlock full potential)
+    T = Trap (Spikes, Poison, or Pit - AVOID AT ALL COSTS)
+    D = Closed Door (Requires Key)
+    _ = Open Door
+    I = Item (Key or Money)
     . = Empty Space
     
     Current State:
     ${gridStr}
 
     Status:
-    Health: ${agent.health}
+    Health: ${agent.health} (Death at 0)
     Rewind Budget: ${agent.rewindBudget}
+    Keys Collected: ${agent.keysCollected}
+    Status Effect: ${agent.statusEffect}
+    
     Recent Events:
     ${recentLogs}
 
-    Task: Navigate to 'G'. Avoid 'T'. 
-    Special Action: REWIND. Use REWIND if you are trapped, stuck, or just took heavy damage efficiently.
-    Rewind costs points but saves the episode.
+    STRICT RULES (READ CAREFULLY):
+    1. REACTIVE REWIND ONLY: You are forbidden from using REWIND based on prediction.
+    2. ENTER DANGER FIRST: You must step ONTO a trap or poison first. This will trigger a "TRAPPED_WAITING_REWIND" status.
+    3. WHEN TRAPPED: If your status is "TRAPPED_WAITING_REWIND", you MUST use REWIND immediately. Movement is blocked in this state.
+    4. WHEN SAFE: If your status is "NONE", do NOT use REWIND. Move normally.
     
-    Choose the best action from: UP, DOWN, LEFT, RIGHT, REWIND, WAIT.
+    Decision Logic:
+    - If status == "TRAPPED_WAITING_REWIND": OUTPUT "REWIND".
+    - If status == "NONE": Choose best path to G. Avoid T if possible, but do not rewind pre-emptively.
+    
+    Choose action from: UP, DOWN, LEFT, RIGHT, REWIND, WAIT.
     Return JSON.
   `;
 

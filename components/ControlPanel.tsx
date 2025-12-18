@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { AgentAction } from '../types';
 
@@ -6,12 +7,13 @@ interface ControlPanelProps {
   onToggleRun: () => void;
   onStep: () => void;
   onNextEpisode: () => void;
-  onNewMap: () => void;
-  onRewind: () => void;
+  onResetBrain: () => void; 
+  onToggleInference: (val: boolean) => void;
+  onEnterTestMode: () => void; 
+  isInferenceMode: boolean; 
+  isTestMode: boolean; 
   onManualAction: (action: AgentAction) => void;
-  useGemini: boolean;
-  onToggleGemini: () => void;
-  canRewind: boolean;
+  rewindBudget: number;
   speed: number;
   onSpeedChange: (val: number) => void;
   episodeCount: number;
@@ -22,47 +24,108 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
   onToggleRun,
   onStep,
   onNextEpisode,
-  onNewMap,
-  onRewind,
+  onResetBrain,
+  onToggleInference,
+  onEnterTestMode,
+  isInferenceMode,
+  isTestMode,
   onManualAction,
-  useGemini,
-  onToggleGemini,
-  canRewind,
+  rewindBudget,
   speed,
   onSpeedChange,
   episodeCount
 }) => {
   return (
-    <div className="bg-slate-800 p-4 rounded-lg border border-slate-700">
-      <div className="flex flex-col gap-4">
+    <div className="glass-panel p-5 rounded-xl border-t border-slate-700/50">
+      <div className="flex flex-col gap-5">
         
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-slate-700/50 pb-2">
+            <span className="font-cyber text-xs tracking-widest text-cyan-500 uppercase">Mission Control</span>
+            <div className={`flex gap-1 items-center px-2 py-0.5 rounded ${isTestMode ? 'bg-purple-900/50 text-purple-400' : (isInferenceMode ? 'bg-emerald-900/50 text-emerald-400' : 'bg-yellow-900/50 text-yellow-400')}`}>
+                <div className={`w-1.5 h-1.5 rounded-full ${isTestMode ? 'bg-purple-400 animate-pulse' : (isInferenceMode ? 'bg-emerald-400' : 'bg-yellow-400 animate-pulse')}`}></div>
+                <span className="text-[10px] font-bold">
+                    {isTestMode ? 'EVALUATION (TEST MODE)' : (isInferenceMode ? 'TRAINED (INFERENCE)' : 'TRAINING (LEARNING)')}
+                </span>
+            </div>
+        </div>
+        
+        {/* TEMPORAL CAPACITOR - REWIND MONITOR */}
+        <div className="bg-slate-900/60 p-4 rounded border border-cyan-500/30 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-cyan-500/5 group-hover:bg-cyan-500/10 transition-colors pointer-events-none"></div>
+            
+            <div className="relative flex items-center justify-between mb-3">
+                <div className="flex flex-col">
+                    <span className="font-cyber text-sm text-cyan-400 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(34,211,238,0.5)]">
+                        Temporal Capacitor
+                    </span>
+                    <span className="text-[9px] text-cyan-600/70 font-mono tracking-tighter">REWIND BUDGET</span>
+                </div>
+                <div className={`font-mono text-xl font-bold ${rewindBudget === 0 ? 'text-red-500' : 'text-cyan-400'}`}>
+                    {rewindBudget}<span className="text-sm opacity-50">/5</span>
+                </div>
+            </div>
+
+            {/* Gauge Bars */}
+            <div className="flex gap-1.5">
+                {Array.from({ length: 5 }).map((_, i) => (
+                    <div 
+                        key={i}
+                        className={`h-4 flex-1 rounded-sm skew-x-[-10deg] transition-all duration-300 ${
+                            i < rewindBudget 
+                            ? 'bg-cyan-400 shadow-[0_0_12px_rgba(34,211,238,0.8)] border border-cyan-200' 
+                            : 'bg-slate-800 border border-slate-700 opacity-30'
+                        }`}
+                    />
+                ))}
+            </div>
+        </div>
+
         {/* Main Sim Controls */}
-        <div className="flex gap-2">
+        <div className="flex gap-3">
           <button
             onClick={onToggleRun}
-            className={`flex-1 py-2 px-4 rounded font-bold text-sm transition-colors ${
+            className={`flex-1 py-3 px-4 rounded font-cyber text-sm tracking-wider transition-all duration-200 border ${
               isRunning 
-                ? 'bg-red-500/20 text-red-400 border border-red-500 hover:bg-red-500/30' 
-                : 'bg-green-500/20 text-green-400 border border-green-500 hover:bg-green-500/30'
+                ? 'bg-red-500/10 text-red-400 border-red-500/50 hover:bg-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.2)]' 
+                : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/50 hover:bg-emerald-500/20 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)]'
             }`}
           >
-            {isRunning ? 'STOP' : 'RUN'}
+            {isRunning ? 'HALT SIMULATION' : 'START GAME'}
           </button>
           
           <button
             onClick={onStep}
             disabled={isRunning}
-            className="px-4 py-2 bg-slate-700 text-slate-200 rounded hover:bg-slate-600 disabled:opacity-50 border border-slate-600 font-mono text-sm"
+            className="px-6 py-2 bg-slate-800 text-slate-300 border border-slate-600 rounded hover:bg-slate-700 hover:text-white hover:border-slate-400 disabled:opacity-30 font-mono text-sm transition-all"
           >
             STEP
           </button>
         </div>
 
+        {/* Brain Controls */}
+        <div className="bg-slate-900/40 p-3 rounded border border-slate-800/50 flex flex-col gap-2">
+            <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Training Campaign</span>
+             <button
+                onClick={onEnterTestMode}
+                className={`w-full px-3 py-2 border rounded text-[10px] font-bold transition-all uppercase tracking-wider ${isTestMode ? 'bg-purple-500/20 border-purple-500 text-purple-300 shadow-[0_0_15px_rgba(168,85,247,0.3)]' : 'bg-slate-800 border-slate-700 text-slate-400 hover:text-purple-300 hover:border-purple-500/50'}`}
+            >
+                {isTestMode ? 'EXIT TEST MODE' : 'RUN TEST (RANDOM MAP)'}
+            </button>
+             <button
+                onClick={onResetBrain}
+                disabled={isTestMode}
+                className="w-full px-3 py-1.5 bg-red-900/10 text-red-400 border border-red-900/30 rounded hover:bg-red-900/30 text-[10px] font-bold transition-all uppercase disabled:opacity-20"
+            >
+                Reset Brain (Simulate "Before Training")
+            </button>
+        </div>
+
         {/* Speed Control */}
-        <div className="bg-slate-900/50 p-3 rounded border border-slate-800">
-          <div className="flex justify-between text-xs text-slate-400 mb-2">
-            <span>SPEED: {speed}ms</span>
-            <span>{speed < 100 ? 'TURBO' : speed > 500 ? 'SLOW' : 'NORMAL'}</span>
+        <div className="bg-slate-900/40 p-3 rounded border border-slate-800/50">
+          <div className="flex justify-between text-xs text-slate-400 mb-2 font-mono">
+            <span>CLOCK_SPEED: {speed}ms</span>
+            <span className={speed < 100 ? 'text-red-400' : 'text-slate-500'}>{speed < 100 ? 'OVERCLOCK' : 'NORMAL'}</span>
           </div>
           <input 
             type="range" 
@@ -71,56 +134,9 @@ const ControlPanel: React.FC<ControlPanelProps> = ({
             step="10" 
             value={speed} 
             onChange={(e) => onSpeedChange(Number(e.target.value))}
-            className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+            className="w-full h-1 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
           />
         </div>
-
-        <div className="h-px bg-slate-700 my-1" />
-
-         {/* Episode Controls */}
-         <div className="flex flex-col gap-2">
-             <button
-                onClick={onNextEpisode}
-                className="w-full px-4 py-2 bg-blue-600/20 text-blue-300 border border-blue-500/50 rounded hover:bg-blue-600/30 text-sm font-semibold"
-            >
-                RETRY LEVEL (Keep Training)
-            </button>
-            <button
-                onClick={onNewMap}
-                className="w-full px-4 py-2 bg-slate-700 text-slate-300 border border-slate-600 rounded hover:bg-slate-600 text-xs"
-            >
-                GENERATE NEW MAP (Reset Agent)
-            </button>
-         </div>
-
-        <div className="h-px bg-slate-700 my-1" />
-
-        {/* AI Mode Toggle */}
-        <div className="flex items-center justify-between bg-slate-900/50 p-3 rounded border border-slate-800">
-           <span className="text-xs font-semibold text-slate-300 uppercase">Policy</span>
-           <button 
-             onClick={onToggleGemini}
-             className={`text-xs px-3 py-1 rounded-full border transition-all ${
-               useGemini 
-               ? 'bg-purple-500/20 border-purple-500 text-purple-300 shadow-[0_0_10px_rgba(168,85,247,0.3)]' 
-               : 'bg-slate-700 border-slate-600 text-slate-400'
-             }`}
-           >
-             {useGemini ? 'GEMINI' : 'Q-LEARNING'}
-           </button>
-        </div>
-
-        {/* Rewind Button */}
-        <button
-          onClick={onRewind}
-          disabled={!canRewind || isRunning}
-          className="w-full mt-2 py-3 bg-purple-900/30 border border-purple-500/50 text-purple-300 rounded hover:bg-purple-900/50 disabled:opacity-30 disabled:cursor-not-allowed flex items-center justify-center gap-2 group transition-all"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 group-hover:-rotate-180 transition-transform duration-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-          </svg>
-          <span className="font-bold">TRIGGER REWIND</span>
-        </button>
 
       </div>
     </div>
