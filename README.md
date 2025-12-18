@@ -167,7 +167,3 @@ The project utilizes automated state-transition validation within `gameLogic.ts`
 3. **PRs:** Ensure `calculateNextState` tests pass and `GridWorld` performance is maintained.
 
 ---
-
-## 15. License
-
-Not licensed yet. Private research repository.
